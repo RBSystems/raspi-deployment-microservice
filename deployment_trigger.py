@@ -39,7 +39,11 @@ class RequestHandler(BaseHTTPRequestHandler):
 
             result = json.loads(response.text)
             print result['response']
-                    
+
+            if 'started' not in result['response']:
+                request.send_response(500)
+                request.end_headers()
+                request.wfile.write("failed to trigger deployment")
 
             request.send_response(200)
             request.end_headers()

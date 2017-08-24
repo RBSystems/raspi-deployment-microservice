@@ -12,9 +12,12 @@ echo "Second boot."
 	echo "Added user pi to the docker group"
 
 # get environment variables
-curl http://sandbag.byu.edu:2000/deploy/$(hostname)
+until $PI_HOSTNAME; do 
+	curl http://sandbag.byu.edu:2000/deploy/$(hostname)
+	source /etc/environment
+done
+
 printf "\nrecieved env. variables\n"
-source /etc/environment
 
 # maria db setup
 until $(curl https://raw.githubusercontent.com/byuoitav/raspi-deployment-microservice/master/mariadb-setup.sh > /tmp/mariadb-setup.sh); do
