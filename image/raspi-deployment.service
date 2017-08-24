@@ -1,0 +1,9 @@
+[Unit]
+Description=allow raspberry pi's to trigger their own code deployments based on their hostname
+After=network.target 
+
+[Service]
+ExecStart=/etc/deployment_trigger.py
+
+[Install]
+WantedBy=multi-user.target

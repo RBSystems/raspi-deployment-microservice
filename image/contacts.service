@@ -1,5 +1,5 @@
 [Unit]
-Description=alerts salt of broken sensor contacts
+Description=alert salt of broken sensor contacts
 After=network.target salt-minion.service
 
 [Service]

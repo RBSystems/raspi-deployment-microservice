@@ -20,9 +20,10 @@ class RequestHandler(BaseHTTPRequestHandler):
             print 'deploying to device:', device
 
             url = os.environ['RASPI_DEPLOYMENT_MICROSERVICE_WSO2_ADDRESS'] + '_device/' + device
+            token = os.environ['RASPI_DEPLOYMENT_MICROSERVICE_WSO2_HEADER'].split(': ')[1]
             headers = {
                     "Accept": "application/json",
-                    "Authorization": os.environ['WSO2_TOKEN']
+                    "Authorization": token
                     }
             print 'sending request to', url
             print 'headers:', headers
