@@ -3,6 +3,7 @@ Description=allow raspberry pi's to trigger their own code deployments based on 
 After=network.target 
 
 [Service]
+EnvironmentFile=/etc/environment
 ExecStart=/etc/deployment_trigger.py
 
 [Install]
