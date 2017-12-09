@@ -90,6 +90,10 @@ func DeployDevice(hostname string) (string, error) {
 	deviceName := strings.Split(allCaps, "-")[2]
 	log.Printf("[helpers] looking for device: %s", deviceName)
 
+	if len(room.Devices) == 0 {
+		log.Printf("%s", color.HiRedString("I HATE YOU!!!"))
+	}
+
 	//get device class
 	var deviceClass string
 	for _, device := range room.Devices {
@@ -313,7 +317,7 @@ func SendCommand(hostname, environment, docker string) error {
 
 	log.Printf("SSH session established with %s", hostname)
 
-	longCommand := fmt.Sprintf("bash -c 'curl %s/%s --output /tmp/docker-compose.yml && curl %s/%s --output /home/pi/.environment-variables && curl %s/move-environment-variables.sh --output /home/pi/move-environment-variables.sh && chmod +x /home/pi/move-environment-variables.sh && /home/pi/move-environment-variables.sh && source /etc/environment && docker-compose -f /tmp/docker-compose.yml pull && docker rmi $(docker images -q --filter \"dangling=true\") || true && docker stop $(docker ps -a -q) || true && docker rm $(docker ps -a -q) || true && docker-compose -f /tmp/docker-compose.yml up -d'", os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), docker, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), environment, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"))
+	longCommand := fmt.Sprintf("bash -c 'curl %s/%s --output /tmp/docker-compose.yml && curl %s/%s --output /home/pi/.environment-variables && curl %s/move-environment-variables.sh --output /home/pi/move-environment-variables.sh && chmod +x /home/pi/move-environment-variables.sh && /home/pi/move-environment-variables.sh && source /etc/environment && docker-compose -f /tmp/docker-compose.yml pull && docker rmi $(docker images -q --filter \"dangling=true\") || true && docker stop $(docker ps -a -q) || true && docker rm $(docker ps -a -q) || true && docker-compose -f /tmp/docker-compose.yml up -d' &> /tmp/deployment_logs.txt", os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), docker, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), environment, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"))
 
 	log.Printf("Running the following command on %s: %s", hostname, longCommand)
 
