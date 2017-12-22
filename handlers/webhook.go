@@ -11,17 +11,15 @@ import (
 
 func WebhookDeployment(context echo.Context) error {
 
-	deviceClass := context.Param("class")
-	deploymentType := context.Param("designation")
+	class := context.Param("class")
+	designation := context.Param("designation")
 
-	response, err := helpers.ScheduleDeployment(deviceClass, deploymentType)
+	err := helpers.Deploy(class, designation)
 	if err != nil {
-		jsonresp.New(context.Response(), http.StatusBadRequest, err.Error())
-		return nil
+		context.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	jsonresp.New(context.Response(), http.StatusOK, response)
-	return nil
+	return context.JSON(http.StatusOK, fmt.Sprintf("deployment to %s %s devices started", designation, class))
 }
 
 func DisableDeploymentsByBranch(context echo.Context) error {

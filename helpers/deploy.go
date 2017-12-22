@@ -41,20 +41,13 @@ var sshConfig = &ssh.ClientConfig{
 var TIMER_DURATION = 3 * time.Minute
 
 //deploys to all pi's with the given class and designation
-//e.g. class = "av-control"
+//e.g. class = "Pi3"
 //e.g. desigation = "development"
 func Deploy(class, designation string) error {
 
 	log.Printf("%s", color.HiGreenString("[helpers] deployment started"))
 
-	//scheduledDeployments[deploymentType] = false //why?? it seems like this code doesn't get executed if this line evaluates to true
-
-	allDevices, err := GetAllDevices(designation)
-	if err != nil {
-		return err
-	}
-
-	environment, err := retrieveEnvironmentVariables(class, designation)
+	allDevices, err := GetAllDevices(class, designation)
 	if err != nil {
 		return err
 	}
@@ -62,6 +55,11 @@ func Deploy(class, designation string) error {
 	dockerCompose, err := RetrieveDockerCompose(class, designation)
 	if err != nil {
 		return errors.New(fmt.Sprintf("error fetching docker-compose file: %s", err.Error()))
+	}
+
+	environment, err := retrieveEnvironmentVariables(class, designation)
+	if err != nil {
+		return err
 	}
 
 	for i := range allDevices {
@@ -179,16 +177,13 @@ func GetDevice(hostname string) (structs.Device, error) {
 }
 
 //TODO make this use the existing DBO package
-func GetAllDevices(deploymentType string) ([]device, error) {
+//gets devices by designation and role
+func GetAllDevices(role, designation string) ([]device, error) {
+
 	client := &http.Client{}
-
-	log.Printf("Making request for all devices to: %v", os.Getenv("CONFIGURATION_DATABASE_MICROSERVICE_ADDRESS")+"/deployment/devices/roles/ControlProcessor/types/pi/"+deploymentType)
-
-	req, _ := http.NewRequest("GET", os.Getenv("CONFIGURATION_DATABASE_MICROSERVICE_ADDRESS")+"/deployment/devices/roles/ControlProcessor/types/pi/"+deploymentType, nil)
-
-	if deploymentType == "production" {
-		req, _ = http.NewRequest("GET", os.Getenv("CONFIGURATION_DATABASE_MICROSERVICE_ADDRESS")+"/devices/roles/ControlProcessor/types/pi", nil)
-	}
+	address := os.Getenv("CONFIGURATION_DATABASE_MICROSERVICE_ADDRESS")                          //get address
+	url := fmt.Sprintf("%s/deployment/devices/roles/%s/types/pi/%s", address, role, designation) //build url
+	req, _ := http.NewRequest("GET", url, nil)                                                   //build request
 
 	if len(os.Getenv("LOCAL_ENVIRONMENT")) == 0 {
 		token, err := bearertoken.GetToken()
@@ -202,8 +197,6 @@ func GetAllDevices(deploymentType string) ([]device, error) {
 	resp, err := client.Do(req)
 	log.Printf("response: %v", resp)
 	if err != nil {
-		log.Printf("Error getting devices 1: %v", err.Error())
-		return []device{}, err
 	}
 
 	b, err := ioutil.ReadAll(resp.Body)
