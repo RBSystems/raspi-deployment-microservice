@@ -11,15 +11,15 @@ import (
 
 func WebhookDeployment(context echo.Context) error {
 
-	class := context.Param("class")
+	role := context.Param("role")
 	designation := context.Param("designation")
 
-	err := helpers.Deploy(class, designation)
+	err := helpers.Deploy(role, designation)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, err.Error())
 	}
 
-	return context.JSON(http.StatusOK, fmt.Sprintf("deployment to %s %s devices started", designation, class))
+	return context.JSON(http.StatusOK, fmt.Sprintf("deployment to %s %s devices started", designation, role))
 }
 
 func DisableDeploymentsByBranch(context echo.Context) error {

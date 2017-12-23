@@ -41,23 +41,23 @@ var sshConfig = &ssh.ClientConfig{
 var TIMER_DURATION = 3 * time.Minute
 
 //deploys to all pi's with the given class and designation
-//e.g. class = "Pi3"
+//e.g. role "ControlProcessor"
 //e.g. desigation = "development"
-func Deploy(class, designation string) error {
+func Deploy(role, designation string) error {
 
 	log.Printf("%s", color.HiGreenString("[helpers] deployment started"))
 
-	allDevices, err := GetAllDevices(class, designation)
+	allDevices, err := GetAllDevices(role, designation)
 	if err != nil {
 		return err
 	}
 
-	dockerCompose, err := RetrieveDockerCompose(class, designation)
+	dockerCompose, err := RetrieveDockerCompose(role, designation)
 	if err != nil {
 		return errors.New(fmt.Sprintf("error fetching docker-compose file: %s", err.Error()))
 	}
 
-	environment, err := retrieveEnvironmentVariables(class, designation)
+	environment, err := retrieveEnvironmentVariables(role, designation)
 	if err != nil {
 		return err
 	}
@@ -183,6 +183,7 @@ func GetAllDevices(role, designation string) ([]device, error) {
 	client := &http.Client{}
 	address := os.Getenv("CONFIGURATION_DATABASE_MICROSERVICE_ADDRESS")                          //get address
 	url := fmt.Sprintf("%s/deployment/devices/roles/%s/types/pi/%s", address, role, designation) //build url
+	log.Printf("[helpers] device request url: %s", url)                                          //print url
 	req, _ := http.NewRequest("GET", url, nil)                                                   //build request
 
 	if len(os.Getenv("LOCAL_ENVIRONMENT")) == 0 {
@@ -197,23 +198,23 @@ func GetAllDevices(role, designation string) ([]device, error) {
 	resp, err := client.Do(req)
 	log.Printf("response: %v", resp)
 	if err != nil {
+		return []device{}, err
 	}
 
 	b, err := ioutil.ReadAll(resp.Body)
-	log.Printf("b: %s", b)
 	if err != nil {
-		log.Printf("Error getting devices 2: %v", err.Error())
+		msg := fmt.Sprintf("response not readable: %s", err.Error())
+		log.Printf("%s", color.HiRedString("[error] %s", msg))
 		return []device{}, err
 	}
 
-	allDevices := []device{}
+	var allDevices []device
 	err = json.Unmarshal(b, &allDevices)
 	if err != nil {
-		log.Printf("Error getting devices 3: %v", err.Error())
+		msg := fmt.Sprintf("failed to unmarshal structs: %s", err.Error())
+		log.Printf("%s", color.HiRedString("[error] %s", msg))
 		return []device{}, err
 	}
-
-	log.Printf("All devices from database: %+v", allDevices)
 
 	return allDevices, nil
 }
@@ -294,7 +295,7 @@ func SendCommand(hostname, environment, docker string) error {
 		return err
 	}
 
-	log.Printf("TCP connection established to %s", hostname)
+	log.Printf("[helpers] TCP connection established to %s", hostname)
 	defer connection.Close()
 
 	magicSession, err := connection.NewSession()
@@ -306,11 +307,13 @@ func SendCommand(hostname, environment, docker string) error {
 
 	log.Printf("SSH session established with %s", hostname)
 
-	longCommand := fmt.Sprintf("bash -c 'curl %s/%s --output /tmp/docker-compose.yml && curl %s/%s --output /home/pi/.environment-variables && curl %s/move-environment-variables.sh --output /home/pi/move-environment-variables.sh && chmod +x /home/pi/move-environment-variables.sh && /home/pi/move-environment-variables.sh && source /etc/environment && docker-compose -f /tmp/docker-compose.yml pull && docker stop $(docker ps -a -q) || true && docker rmi -f $(docker images -q --filter \"dangling=true\") || true && docker rm $(docker ps -a -q) || true && docker-compose -f /tmp/docker-compose.yml up -d' &> /tmp/deployment_logs.txt", os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), docker, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), environment, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"))
+	address := os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS")                                                                          //set address to get files from
+	actualCommand := fmt.Sprintf("/tmp/deploy.sh %s %s %s &> /tmp/deployment_logs.txt", address, docker, environment)                      //build magic command
+	wrapper := fmt.Sprintf("bash -c `curl %s/deploy.sh --output /tmp/deploy.sh && chmod +x /tmp/deploy.sh && %s`", address, actualCommand) //wrap magic command
 
-	log.Printf("Running the following command on %s: %s", hostname, longCommand)
+	log.Printf("[helpers] running the following command on %s: %s", hostname, wrapper)
 
-	err = magicSession.Run(longCommand)
+	err = magicSession.Run(wrapper)
 	if err != nil {
 		log.Printf("%s", color.HiRedString("[helpers] error updating %s: %s", hostname, err.Error()))
 		reportToELK(hostname, err)
