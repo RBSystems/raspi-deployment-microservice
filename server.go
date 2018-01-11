@@ -31,10 +31,9 @@ func main() {
 	router.GET("/health", echo.WrapHandler(http.HandlerFunc(health.Check)))
 
 	secure.GET("/webhook/:class/:designation", handlers.WebhookDeployment)
-	secure.GET("/webhook/:branch/disable", handlers.DisableDeploymentsByBranch)
-	secure.GET("/webhook/:branch/enable", handlers.EnableDeploymentsByBranch)
-
 	secure.GET("/webhook_device/:hostname", handlers.WebhookDevice)
+	secure.GET("/webhook_device/:hostname/first", handlers.WebhookDeviceFirstTime)
+
 	secure.GET("/webhook_contacts/enable/:hostname", handlers.EnableContacts)
 	secure.GET("/webhook_contacts/disable/:hostname", handlers.DisableContacts)
 

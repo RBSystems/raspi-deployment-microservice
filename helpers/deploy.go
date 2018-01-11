@@ -71,7 +71,7 @@ func Deploy(class, designation string) error {
 	return nil
 }
 
-func DeployDevice(hostname string) (string, error) {
+func DeployDevice(hostname string, firstTime bool) (string, error) {
 
 	log.Printf("[helpers] starting single deployment...")
 
@@ -125,7 +125,7 @@ func DeployDevice(hostname string) (string, error) {
 		return "", err
 	}
 
-	go SendCommand(dev.Address, envFile, dockerCompose) // Start an update for the Pi
+	go SendCommand(dev.Address, envFile, dockerCompose, true) // Start an update for the Pi
 
 	log.Printf("deployment started")
 	return "deployment started", nil
@@ -293,7 +293,7 @@ func reportToELK(hostname string, err error) {
 	}
 }
 
-func SendCommand(hostname, environment, docker string) error {
+func SendCommand(hostname, environment, docker string, firstTime bool) error {
 	connection, err := ssh.Dial("tcp", hostname+":22", sshConfig)
 	if err != nil {
 		log.Printf("Error dialing %s: %s", hostname, err.Error())
@@ -313,7 +313,13 @@ func SendCommand(hostname, environment, docker string) error {
 
 	log.Printf("SSH session established with %s", hostname)
 
-	longCommand := fmt.Sprintf("bash -c 'curl %s/%s --output /tmp/docker-compose-tmp.yml && curl %s/%s --output /home/pi/.environment-variables && curl %s/move-environment-variables.sh --output /home/pi/move-environment-variables.sh && chmod +x /home/pi/move-environment-variables.sh && /home/pi/move-environment-variables.sh && source /etc/environment && echo \"$(cat /tmp/docker-compose-tmp.yml)\" | envsubst > /tmp/docker-compose.yml && docker-compose -f /tmp/docker-compose.yml pull && docker stop $(docker ps -a -q) || true && docker rmi -f $(docker images -q --filter \"dangling=true\") || true && docker rm $(docker ps -a -q) || true && docker-compose -f /tmp/docker-compose.yml up -d' &> /tmp/deployment_logs.txt", os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), docker, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), environment, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"))
+	var longCommand string
+
+	if firstTime {
+		longCommand = fmt.Sprintf("bash -c 'curl %s/%s --output /tmp/docker-compose-tmp.yml && curl %s/%s --output /home/pi/.environment-variables && curl %s/move-environment-variables.sh --output /home/pi/move-environment-variables.sh && chmod +x /home/pi/move-environment-variables.sh && /home/pi/move-environment-variables.sh && source /etc/environment && echo \"$(cat /tmp/docker-compose-tmp.yml)\" | envsubst > /tmp/docker-compose.yml && docker-compose -f /tmp/docker-compose.yml pull && docker stop $(docker ps -a -q) || true && docker rmi -f $(docker images -q --filter \"dangling=true\") || true && docker rm $(docker ps -a -q) || true && docker-compose -f /tmp/docker-compose.yml up -d' &> /tmp/deployment_logs.txt", os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), docker, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), environment, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"))
+	} else {
+		longCommand = fmt.Sprint("bash -c 'curl %s/%s --output /tmp/docker-compose-tmp.yml && curl %s/%s --output /home/pi/.environment-variables && curl %s/move-environment-variables.sh --output /home/pi/move-environment-variables.sh && chmod +x /home/pi/move-environment-variables.sh && /home/pi/move-environment-variables.sh && source /etc/environment && echo \"$(cat /tmp/docker-compose-tmp.yml)\" | envsubst > /tmp/docker-compose.yml && docker-compose -f /tmp/docker-compose.yml pull && docker-compose -f /tmp/docker-compose.yml up -d' &> /tmp/deployment_logs.txt", os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), docker, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), environment, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"))
+	}
 
 	log.Printf("Running the following command on %s: %s", hostname, longCommand)
 
