@@ -65,7 +65,7 @@ func Deploy(class, designation string) error {
 	}
 
 	for i := range allDevices {
-		go SendCommand(allDevices[i].Address, environment, dockerCompose) // Start an update for each Pi
+		go SendCommand(allDevices[i].Address, environment, dockerCompose, false) // Start an update for each Pi
 	}
 
 	return nil
