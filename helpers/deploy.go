@@ -14,9 +14,8 @@ import (
 
 	"github.com/byuoitav/authmiddleware/bearertoken"
 	"github.com/byuoitav/configuration-database-microservice/structs"
+	"github.com/byuoitav/raspi-deployment-microservice/connect"
 	"github.com/fatih/color"
-
-	"golang.org/x/crypto/ssh"
 )
 
 type device struct {
@@ -29,13 +28,6 @@ type elkReport struct {
 	Hostname  string `json:"hostname"`
 	Timestamp string `json:"timestamp"`
 	Action    string `json:"action"`
-}
-
-var sshConfig = &ssh.ClientConfig{
-	User: os.Getenv("PI_SSH_USERNAME"),
-	Auth: []ssh.AuthMethod{
-		ssh.Password(os.Getenv("PI_SSH_PASSWORD")),
-	},
 }
 
 var TIMER_DURATION = 3 * time.Minute
@@ -294,34 +286,14 @@ func reportToELK(hostname string, err error) {
 }
 
 func SendCommand(hostname, environment, docker string) error {
-	connection, err := ssh.Dial("tcp", hostname+":22", sshConfig)
-	if err != nil {
-		log.Printf("Error dialing %s: %s", hostname, err.Error())
-		reportToELK(hostname, err)
-		return err
-	}
-
-	log.Printf("TCP connection established to %s", hostname)
-	defer connection.Close()
-
-	magicSession, err := connection.NewSession()
-	if err != nil {
-		log.Printf("%s", color.HiRedString("[helpers] error starting a session with %s: %s", hostname, err.Error()))
-		reportToELK(hostname, err)
-		return err
-	}
-
-	log.Printf("SSH session established with %s", hostname)
 
 	longCommand := fmt.Sprintf("bash -c 'curl %s/%s --output /tmp/docker-compose-tmp.yml && curl %s/%s --output /home/pi/.environment-variables && curl %s/move-environment-variables.sh --output /home/pi/move-environment-variables.sh && chmod +x /home/pi/move-environment-variables.sh && /home/pi/move-environment-variables.sh && source /etc/environment && echo \"$(cat /tmp/docker-compose-tmp.yml)\" | envsubst > /tmp/docker-compose.yml && docker-compose -f /tmp/docker-compose.yml pull && docker stop $(docker ps -a -q) || true && docker rmi -f $(docker images -q --filter \"dangling=true\") || true && docker rm $(docker ps -a -q) || true && docker-compose -f /tmp/docker-compose.yml up -d' &> /tmp/deployment_logs.txt", os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), docker, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"), environment, os.Getenv("RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS"))
 
-	log.Printf("Running the following command on %s: %s", hostname, longCommand)
-
-	err = magicSession.Run(longCommand)
+	err := connect.RunCommand(hostname, longCommand)
 	if err != nil {
-		log.Printf("%s", color.HiRedString("[helpers] error updating %s: %s", hostname, err.Error()))
-		reportToELK(hostname, err)
-		return err
+		msg := fmt.Sprintf("error updating %s: %s", hostname, err.Error())
+		log.Printf("%s", color.HiRedString("[helpers] %s", msg))
+		return errors.New(msg)
 	}
 
 	log.Printf("%s", color.HiGreenString("[helpers] finished updating %s", hostname))
