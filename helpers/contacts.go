@@ -3,10 +3,12 @@ package helpers
 import (
 	"log"
 
+	"github.com/byuoitav/raspi-deployment-microservice/connect"
 	"github.com/fatih/color"
-
-	"golang.org/x/crypto/ssh"
 )
+
+const ENABLE = "sudo systemctl enable contacts && sudo systemctl start contacts"
+const DISABLE = "sudo systemctl stop contacts && sudo systemctl disable contacts"
 
 //@param active - true indicates monitoring the contact points, false indicates not monitoring the contact points
 func UpdateContactState(hostname string, active bool) error {
@@ -19,8 +21,8 @@ func UpdateContactState(hostname string, active bool) error {
 	log.Printf("%s", color.HiGreenString("[helpers] %s contact point monitoring on %s...", state, hostname))
 
 	if active {
-		return ssh.RunCommand("sudo systemctl enable contacts && sudo systemctl start contacts")
+		return connect.RunCommand(hostname, ENABLE)
 	}
 
-	return ssh.RunCommand("sudo systemctl stop contacts && sudo systemctl disable contacts")
+	return connect.RunCommand(hostname, DISABLE)
 }

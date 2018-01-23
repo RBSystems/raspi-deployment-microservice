@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/byuoitav/pi-designation-microservice/accessors"
+	"github.com/byuoitav/raspi-deployment-microservice/passwords"
 	"github.com/fatih/color"
 )
 
@@ -29,7 +30,7 @@ func GetClassId(className string) (int64, error) {
 		return 0, errors.New(msg)
 	}
 
-	err = SetToken(req)
+	err = passwords.SetToken(req)
 	if err != nil {
 		msg := fmt.Sprintf("failed to set bearer token: %s", err.Error())
 		log.Printf("%s", color.HiRedString("[helpers] %s", msg))
@@ -90,7 +91,7 @@ func GetDesignationId(desigName string) (int64, error) {
 		return 0, errors.New(msg)
 	}
 
-	err = SetToken(req)
+	err = passwords.SetToken(req)
 	if err != nil {
 		msg := fmt.Sprintf("failed to set bearer token: %s", err.Error())
 		log.Printf("%s", color.HiRedString("[helpers] %s", msg))

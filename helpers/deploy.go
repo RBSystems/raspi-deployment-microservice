@@ -15,6 +15,7 @@ import (
 	"github.com/byuoitav/authmiddleware/bearertoken"
 	"github.com/byuoitav/configuration-database-microservice/structs"
 	"github.com/byuoitav/raspi-deployment-microservice/connect"
+	"github.com/byuoitav/raspi-deployment-microservice/passwords"
 	"github.com/fatih/color"
 )
 
@@ -136,7 +137,7 @@ func GetDevice(hostname string) (structs.Device, error) {
 
 	req, _ := http.NewRequest("GET", fmt.Sprintf("%s/buildings/%s/rooms/%s/devices/%s", os.Getenv("CONFIGURATION_DATABASE_MICROSERVICE_ADDRESS"), splitRoom[0], splitRoom[1], splitRoom[2]), nil)
 
-	err := SetToken(req)
+	err := passwords.SetToken(req)
 	if err != nil {
 		msg := fmt.Sprintf("failed to set bearer token: %s", err.Error())
 		log.Printf("%s", color.HiRedString("[helpers] %s", msg))
@@ -236,7 +237,7 @@ func GetRoom(hostname string) (structs.Room, error) {
 
 	req, _ := http.NewRequest("GET", url, nil)
 
-	err := SetToken(req)
+	err := passwords.SetToken(req)
 	if err != nil {
 		msg := fmt.Sprintf("cannot set token: %s", err.Error())
 		log.Printf("%s", color.HiRedString("[helpers] %s", msg))

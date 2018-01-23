@@ -5,9 +5,8 @@
 
 ## Setup
 ### Environment Variables
-The following environment variables need to be set in Circle so the deployment functionality can SSH into the Raspberry Pi's: `PI_SSH_USERNAME`, `PI_SSH_PASSWORD`, `CONFIGURATION_DATABASE_MICROSERVICE_ADDRESS`, `RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS`, and `ELK_ADDRESS`
+The following environment variables need to be set in Circle so the deployment functionality can SSH into the Raspberry Pi's: `PI_SSH_USERNAME`, `PI_SSH_PASSWORD`, `CONFIGURATION_DATABASE_MICROSERVICE_ADDRESS`, `RASPI_DEPLOYMENT_MICROSERVICE_ADDRESS`, `ELK_ADDRESS`, `RASPI_CRED_MICROSERVICE_ADDRESS`, `DESIGNATION_MICROSERVICE_ADDRESS`
 
-Additionally, any environment variables the Pi's will need to function need to be set in the Circle web interface.
 
 ### Installation
 The installation process is mostly automated and very easy
@@ -24,7 +23,10 @@ The installation process is mostly automated and very easy
 
 1. Wait for the Pi to reboot twice, then it's good to go
 
-### Contact Points
+### Security Contact Points
 The Raspberry Pi's monitor contact closures on their GPIO pins with a python-based systemd service, which is automatically installed during the setup sequence. 
 The Pi monitors on pin 7 and grounds pin 9
+
+### Room Divider Sensors
+
 

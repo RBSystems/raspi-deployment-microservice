@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/byuoitav/authmiddleware/bearertoken"
+	"github.com/byuoitav/raspi-deployment-microservice/passwords"
 	"github.com/fatih/color"
 )
 
@@ -145,7 +145,7 @@ func MakeEnvironmentRequest(endpoint string) (*http.Response, error) {
 		return &http.Response{}, errors.New(fmt.Sprintf("unable to request docker-compose or etc/environment file: %s", err.Error()))
 	}
 
-	err = SetToken(req)
+	err = passwords.SetToken(req)
 	if err != nil {
 		return &http.Response{}, errors.New(fmt.Sprintf("unable to request docker-compose or etc/environment file: %s", err.Error()))
 	}
@@ -156,23 +156,4 @@ func MakeEnvironmentRequest(endpoint string) (*http.Response, error) {
 	}
 
 	return resp, nil
-}
-
-func SetToken(request *http.Request) error {
-
-	if len(os.Getenv("LOCAL_ENVIRONMENT")) == 0 {
-
-		log.Printf("[helpers] setting bearer token...")
-
-		token, err := bearertoken.GetToken()
-		if err != nil {
-			msg := fmt.Sprintf("cannot get bearer token: %s", err.Error())
-			log.Printf("%s", color.HiRedString("[helpers] %s", msg))
-			return errors.New(msg)
-		}
-
-		request.Header.Set("Authorization", "Bearer "+token.Token)
-	}
-
-	return nil
 }
