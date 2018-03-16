@@ -12,7 +12,6 @@ jobs:
                 gvt fetch -branch $CIRCLE_BRANCH github.com/byuoitav/authmiddleware
                 gvt fetch -branch $CIRCLE_BRANCH github.com/byuoitav/av-api
                 gvt fetch -branch $CIRCLE_BRANCH github.com/byuoitav/configuration-database-microservice
-                gvt fetch -branch $CIRCLE_BRANCH github.com/byuoitav/hateoas
                 gvt fetch -branch $CIRCLE_BRANCH github.com/byuoitav/pi-designation-microservice
             - setup_remote_docker
             - run: | 

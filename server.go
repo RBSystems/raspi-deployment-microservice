@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/byuoitav/authmiddleware"
-	"github.com/byuoitav/hateoas"
 	"github.com/byuoitav/raspi-deployment-microservice/handlers"
 	"github.com/jessemillar/health"
 	"github.com/labstack/echo"
@@ -21,7 +20,7 @@ func main() {
 	// Use the `secure` routing group to require authentication
 	secure := router.Group("", echo.WrapMiddleware(authmiddleware.Authenticate))
 
-	router.GET("/", echo.WrapHandler(http.HandlerFunc(hateoas.RootResponse)))
+	//	router.GET("/", echo.WrapHandler(http.HandlerFunc(hateoas.RootResponse)))
 	router.GET("/health", echo.WrapHandler(http.HandlerFunc(health.Check)))
 
 	secure.GET("/webhook/:designation", handlers.DeployDesignation) //	looks for all rooms with the given designation and deploys to all roles
