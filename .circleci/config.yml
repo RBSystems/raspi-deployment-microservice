@@ -15,5 +15,6 @@ jobs:
                 gvt fetch -branch $CIRCLE_BRANCH github.com/byuoitav/pi-designation-microservice/accessors
                 gvt fetch -branch $CIRCLE_BRANCH github.com/fatih/color
             - setup_remote_docker
-            - run: | make docker
-                    ./deploy.sh $CIRCLE_PROJECT_REPONAME $CIRCLE_SHA2 $CIRCLE_BRANCH
+            - run: | 
+                make docker
+                ./deploy.sh $CIRCLE_PROJECT_REPONAME $CIRCLE_SHA2 $CIRCLE_BRANCH
