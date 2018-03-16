@@ -11,7 +11,7 @@ aws configure set region us-west-2
 aws s3 cp $DOCKERRUN_FILE s3://$EB_BUCKET/$DOCKERRUN_FILE # Copy the Dockerrun file to the S3 bucket
 
 # Update Elastic Beanstalk environment to new version
-if [ "$BRANCH" == "master"]; then 
+if [ "$BRANCH" == "master" ]; then 
 	aws elasticbeanstalk create-application-version --application-name $PROJECT_NAME --version-label $SHA1 --source-bundle S3Bucket=$EB_BUCKET,S3Key=$DOCKERRUN_FILE
 	aws elasticbeanstalk update-environment --environment-name $PROJECT_NAME-env --version-label $SHA1
 else
