@@ -6,6 +6,8 @@ EB_BUCKET=elasticbeanstalk-us-west-2-194925301021
 # Create new Elastic Beanstalk version
 DOCKERRUN_FILE=$SHA1-Dockerrun.aws.json
 
+echo $BRANCH
+
 # Update Elastic Beanstalk environment to new version
 if [ "$BRANCH" == "master" ]; then 
 
