@@ -39,7 +39,7 @@ func GetDeviceDocker(target structs.Device) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(fmt.Sprintf("non-200 response from designation microservice: %d", resp.StatusCode))
+		return "", errors.New(fmt.Sprintf("non-200 response (%d) requesting docker from url: %s", resp.StatusCode, url))
 	}
 
 	var fileName string
