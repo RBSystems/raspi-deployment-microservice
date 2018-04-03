@@ -39,7 +39,7 @@ func GetDeviceEnvironment(target structs.Device) (string, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return "", errors.New(fmt.Sprintf("non-200 response from designation microservice: %d", resp.StatusCode))
+		return "", errors.New(fmt.Sprintf("non-200 response from designation microservice (%s): %d", url, resp.StatusCode))
 	}
 
 	var fileName string
